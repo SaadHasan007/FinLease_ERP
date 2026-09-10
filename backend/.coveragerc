@@ -1,0 +1,22 @@
+[run]
+source = app
+omit =
+    app/db/base.py
+    alembic/*
+    */migrations/*
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.
+    raise NotImplementedError
+    pass
+    @abstractmethod
+show_missing = true
+precision = 2
+fail_under = 80
+
+[html]
+directory = htmlcov

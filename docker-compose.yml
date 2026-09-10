@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: finlease_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-finlease}
+      POSTGRES_USER: ${DB_USER:-finlease_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-finlease_pass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-finlease_user} -d ${DB_NAME:-finlease}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: finlease_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finlease_backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${DB_USER:-finlease_user}:${DB_PASSWORD:-finlease_pass}@db:5432/${DB_NAME:-finlease}
+      DATABASE_URL_SYNC: postgresql://${DB_USER:-finlease_user}:${DB_PASSWORD:-finlease_pass}@db:5432/${DB_NAME:-finlease}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8081"]}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: finlease_adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    profiles:
+      - dev
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
