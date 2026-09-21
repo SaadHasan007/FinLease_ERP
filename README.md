@@ -1,5 +1,10 @@
 # FinLease ERP
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+
 FinLease ERP is a finance and leasing management platform built for handling applications, contracts, collections, assets, accounting, and customer operations in a single system.
 
 ## Overview
@@ -30,6 +35,22 @@ This repository contains the core application source for a full-stack ERP system
 - Infra: Docker, Docker Compose
 - Tooling: pytest, Playwright
 
+## Architecture
+
+```mermaid
+flowchart LR
+    User[Users / Agents] --> Web[Frontend Web App]
+    User --> Mobile[Mobile App]
+    Web --> API[FastAPI Backend]
+    Mobile --> API
+    API --> Auth[Authentication]
+    API --> Core[Business Services]
+    Core --> DB[(PostgreSQL)]
+    Core --> Redis[(Redis)]
+    Core --> AI[AI / Risk Services]
+    API --> Docs[Swagger API Docs]
+```
+
 ## Repository Structure
 
 ```text
@@ -44,7 +65,7 @@ This repository contains the core application source for a full-stack ERP system
 ├── .gitignore               # Ignore rules for local environment files and build artifacts
 ├── README.md                # Project overview and setup guide
 ├── LICENSE                  # MIT open-source license
-└── docker-compose.test.yml  # Test environment stack
+└── .github/                 # GitHub automation and project metadata
 ```
 
 > This repository intentionally keeps only the core ERP application source. Generated QA assets, document conversion scripts, and report-generation utilities are excluded from the published GitHub project.
