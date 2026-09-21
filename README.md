@@ -43,7 +43,8 @@ This repository contains the core application source for a full-stack ERP system
 ├── .env.example             # Sample environment variables
 ├── .gitignore               # Ignore rules for local environment files and build artifacts
 ├── README.md                # Project overview and setup guide
-└── LICENSE                  # Optional project license (if added later)
+├── LICENSE                  # MIT open-source license
+└── docker-compose.test.yml  # Test environment stack
 ```
 
 > This repository intentionally keeps only the core ERP application source. Generated QA assets, document conversion scripts, and report-generation utilities are excluded from the published GitHub project.
@@ -113,4 +114,4 @@ This repository is meant to contain the production-relevant application code and
 
 ## License
 
-This project does not currently declare a public license. Add one if you intend to distribute it publicly.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
