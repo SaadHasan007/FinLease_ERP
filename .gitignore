@@ -71,3 +71,23 @@ desktop.ini
 # Secrets
 *.pem
 *.key
+
+# Project-specific non-source artifacts
+Automation_By_Saad/
+Atomation_By_Saad/
+FinLease Testing/
+BDD_Implemented_Cases.docx
+FinLease_QA_Test_Cases.xlsx
+FinLease_QE_Gherkin_Converted_Cases.docx
+coverage/
+coverage.json
+playwright-report/
+playwright/.cache/
+**/test-results/
+**/playwright-report/
+**/coverage/
+**/*.docx
+**/*.xlsx
+scripts/generate_*.py
+scripts/*.docx
+scripts/*.xlsx

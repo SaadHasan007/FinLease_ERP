@@ -1,9 +1,10 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 import datetime
+from uuid import UUID
 
 class NotificationBase(BaseModel):
-    user_id: int
+    user_id: UUID
     title: str
     message: str
     is_read: bool = False
@@ -16,7 +17,7 @@ class NotificationUpdate(BaseModel):
     is_read: Optional[bool] = None
 
 class NotificationResponse(NotificationBase):
-    id: int
+    id: UUID
     created_at: datetime.datetime
     updated_at: datetime.datetime
     model_config = ConfigDict(from_attributes=True)

@@ -17,8 +17,13 @@ class BaseRepository(Generic[ModelType]):
         self.model = model
         self.session = session
 
-    async def get_by_id(self, entity_id: uuid.UUID) -> ModelType | None:
+    async def get_by_id(self, entity_id: uuid.UUID | str) -> ModelType | None:
         """Retrieve a single entity by ID, excluding soft-deleted."""
+        if isinstance(entity_id, str):
+            try:
+                entity_id = uuid.UUID(entity_id)
+            except ValueError:
+                return None
         result = await self.session.execute(
             select(self.model).where(
                 self.model.id == entity_id,  # type: ignore
@@ -32,8 +37,12 @@ class BaseRepository(Generic[ModelType]):
         offset: int = 0,
         limit: int = 20,
         filters: list | None = None,
+        skip: int | None = None,
+        **kwargs: Any,
     ) -> list[ModelType]:
         """Retrieve all entities with optional filtering and pagination."""
+        if skip is not None:
+            offset = skip
         query = select(self.model).where(
             self.model.is_deleted == False  # noqa: E712  # type: ignore
         )
@@ -63,7 +72,7 @@ class BaseRepository(Generic[ModelType]):
         return entity
 
     async def update_fields(
-        self, entity_id: uuid.UUID, fields: dict[str, Any]
+        self, entity_id: uuid.UUID | str, fields: dict[str, Any]
     ) -> ModelType | None:
         """Update specific fields on an entity."""
         entity = await self.get_by_id(entity_id)
@@ -75,7 +84,7 @@ class BaseRepository(Generic[ModelType]):
         await self.session.refresh(entity)
         return entity
 
-    async def soft_delete(self, entity_id: uuid.UUID) -> bool:
+    async def soft_delete(self, entity_id: uuid.UUID | str) -> bool:
         """Soft-delete an entity."""
         from datetime import datetime, timezone
         entity = await self.get_by_id(entity_id)

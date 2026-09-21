@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+from uuid import UUID
 from app.core.dependencies import get_db, require_role
 from app.schemas.collection import CollectionCaseCreate, CollectionCaseUpdate, CollectionCaseResponse, CollectionActionCreate, CollectionActionResponse
 from app.services.collection_service import CollectionService
 
-router = APIRouter(prefix="/collections", tags=["collections"])
+router = APIRouter()
 
 @router.post("/cases", response_model=CollectionCaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(case_in: CollectionCaseCreate, db: AsyncSession = Depends(get_db)):
@@ -18,7 +19,7 @@ async def get_all_cases(db: AsyncSession = Depends(get_db)):
     return await service.get_all_cases()
 
 @router.get("/cases/{case_id}", response_model=CollectionCaseResponse)
-async def get_case(case_id: int, db: AsyncSession = Depends(get_db)):
+async def get_case(case_id: UUID, db: AsyncSession = Depends(get_db)):
     service = CollectionService(db)
     case = await service.get_case(case_id)
     if not case:
@@ -26,7 +27,8 @@ async def get_case(case_id: int, db: AsyncSession = Depends(get_db)):
     return case
 
 @router.put("/cases/{case_id}", response_model=CollectionCaseResponse)
-async def update_case(case_id: int, case_in: CollectionCaseUpdate, db: AsyncSession = Depends(get_db)):
+@router.patch("/cases/{case_id}", response_model=CollectionCaseResponse)
+async def update_case(case_id: UUID, case_in: CollectionCaseUpdate, db: AsyncSession = Depends(get_db)):
     service = CollectionService(db)
     case = await service.update_case(case_id, case_in)
     if not case:

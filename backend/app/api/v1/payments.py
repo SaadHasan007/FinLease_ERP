@@ -50,6 +50,7 @@ async def list_payment_schedules(
     return await service.get_multi(skip=skip, limit=limit)
 
 @router.put("/{id}", response_model=PaymentScheduleResponse)
+@router.patch("/{id}", response_model=PaymentScheduleResponse)
 async def update_payment_schedule(
     id: UUID,
     data: PaymentScheduleUpdate,

@@ -15,7 +15,7 @@ class TestAuthRegister:
     ) -> None:
         """Registration with valid data should succeed."""
         response = await client.post("/api/v1/auth/register", json={
-            "email": "newuser@finlease.test",
+            "email": "newuser@finlease.com",
             "password": "Str0ng!Pass",
             "first_name": "New",
             "last_name": "User",
@@ -24,7 +24,7 @@ class TestAuthRegister:
         assert response.status_code == 201
         data = response.json()
         assert data["success"] is True
-        assert data["data"]["email"] == "newuser@finlease.test"
+        assert data["data"]["email"] == "newuser@finlease.com"
 
     @pytest.mark.asyncio
     async def test_register_duplicate_email(
@@ -46,7 +46,7 @@ class TestAuthRegister:
     ) -> None:
         """Registration with weak password should fail validation."""
         response = await client.post("/api/v1/auth/register", json={
-            "email": "weak@finlease.test",
+            "email": "weak@finlease.com",
             "password": "weak",
             "first_name": "Weak",
             "last_name": "User",
@@ -65,7 +65,7 @@ class TestAuthLogin:
     ) -> None:
         """Login with valid credentials should return tokens."""
         response = await client.post("/api/v1/auth/login", json={
-            "email": "admin@finlease.test",
+            "email": "admin@finlease.com",
             "password": "Admin@123!",
         })
         assert response.status_code == 200
@@ -80,7 +80,7 @@ class TestAuthLogin:
     ) -> None:
         """Login with wrong password should return 401."""
         response = await client.post("/api/v1/auth/login", json={
-            "email": "admin@finlease.test",
+            "email": "admin@finlease.com",
             "password": "WrongPassword1!",
         })
         assert response.status_code == 401
@@ -91,7 +91,7 @@ class TestAuthLogin:
     ) -> None:
         """Login with non-existent email should return 401."""
         response = await client.post("/api/v1/auth/login", json={
-            "email": "nobody@finlease.test",
+            "email": "nobody@finlease.com",
             "password": "Admin@123!",
         })
         assert response.status_code == 401
@@ -110,7 +110,7 @@ class TestAuthMe:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert data["data"]["email"] == "admin@finlease.test"
+        assert data["data"]["email"] == "admin@finlease.com"
 
     @pytest.mark.asyncio
     async def test_me_without_token(self, client: AsyncClient) -> None:

@@ -1,25 +1,38 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from decimal import Decimal
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from uuid import UUID
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select
 from app.schemas.accounting import JournalEntryCreate, AccountCreate, AccountResponse, JournalEntryResponse
 from app.repositories.accounting_repository import AccountRepository, JournalEntryRepository
-from app.models.accounting import AccountType, JournalEntryStatus
-from sqlalchemy import select, func
-from app.models.accounting import Account, JournalEntry, JournalEntryLine
-import uuid
+from app.models.accounting import AccountType, JournalEntryStatus, Account, JournalEntry, JournalEntryLine
 
 class AccountingService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.account_repo = AccountRepository()
-        self.journal_repo = JournalEntryRepository()
+        self.account_repo = AccountRepository(session)
+        self.journal_repo = JournalEntryRepository(session)
 
     async def list_accounts(self) -> List[Account]:
-        return await self.account_repo.get_all(self.session)
+        return await self.account_repo.get_all()
+
+    async def create_account(self, account_in: AccountCreate) -> Account:
+        existing = await self.account_repo.get_by_code(account_in.code) if hasattr(self.account_repo, "get_by_code") else None
+        account = Account(
+            code=account_in.code,
+            name=account_in.name,
+            account_type=account_in.account_type,
+            current_balance=account_in.current_balance
+        )
+        return await self.account_repo.create(account)
+
+    async def list_journal_entries(self, skip: int = 0, limit: int = 100) -> List[JournalEntry]:
+        return await self.journal_repo.get_all_with_lines(offset=skip, limit=limit)
 
     async def get_trial_balance(self) -> Dict[str, Decimal]:
-        accounts = await self.account_repo.get_all(self.session)
+        accounts = await self.account_repo.get_all()
         trial_balance = {
             "ASSET": Decimal('0'),
             "LIABILITY": Decimal('0'),
@@ -28,7 +41,8 @@ class AccountingService:
             "EXPENSE": Decimal('0')
         }
         for account in accounts:
-            trial_balance[account.account_type] += Decimal(str(account.current_balance))
+            if account.account_type in trial_balance:
+                trial_balance[account.account_type] += Decimal(str(account.current_balance or 0))
         return trial_balance
 
     async def post_journal_entry(self, entry_in: JournalEntryCreate) -> JournalEntry:
@@ -39,22 +53,21 @@ class AccountingService:
             raise HTTPException(status_code=400, detail="Debits and credits must be equal")
 
         new_entry = JournalEntry(
-            id=str(uuid.uuid4()),
             date=entry_in.date,
             reference=entry_in.reference,
             description=entry_in.description,
-            status=entry_in.status.value
+            status=entry_in.status if isinstance(entry_in.status, str) else entry_in.status.value
         )
         self.session.add(new_entry)
+        await self.session.flush()
 
         for line_in in entry_in.lines:
-            account = await self.account_repo.get(self.session, line_in.account_id)
+            account = await self.account_repo.get_by_id(line_in.account_id)
             if not account:
                 raise HTTPException(status_code=404, detail=f"Account {line_in.account_id} not found")
 
             # Create line
             new_line = JournalEntryLine(
-                id=str(uuid.uuid4()),
                 journal_entry_id=new_entry.id,
                 account_id=account.id,
                 debit=line_in.debit,
@@ -69,8 +82,11 @@ class AccountingService:
             if account.account_type in [AccountType.LIABILITY.value, AccountType.EQUITY.value, AccountType.REVENUE.value]:
                 balance_change = line_in.credit - line_in.debit
 
-            account.current_balance = Decimal(str(account.current_balance)) + balance_change
+            account.current_balance = Decimal(str(account.current_balance or 0)) + balance_change
 
-        await self.session.commit()
-        await self.session.refresh(new_entry)
-        return new_entry
+        await self.session.flush()
+
+        # Reload with lines
+        stmt = select(JournalEntry).options(selectinload(JournalEntry.lines)).where(JournalEntry.id == new_entry.id)
+        res = await self.session.execute(stmt)
+        return res.scalar_one()

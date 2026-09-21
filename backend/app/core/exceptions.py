@@ -116,8 +116,27 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
     )
 
 
+from sqlalchemy.exc import IntegrityError
+
+async def integrity_exception_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+    import logging
+    logger = logging.getLogger("finlease")
+    logger.error("Integrity error: %s", exc)
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={
+            "success": False,
+            "error": {
+                "code": "CONFLICT",
+                "message": "This record already exists or conflicts with another record.",
+                "details": [],
+            },
+        },
+    )
+
+
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Catch-all for unhandled exceptions — never leak stack traces."""
+    """Catch-all for unhandled exceptions."""
     import logging
     logger = logging.getLogger("finlease")
     logger.exception("Unhandled exception: %s", exc)
@@ -127,7 +146,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             "success": False,
             "error": {
                 "code": "SYS_500",
-                "message": "An internal server error occurred.",
+                "message": str(exc),
                 "details": [],
             },
         },

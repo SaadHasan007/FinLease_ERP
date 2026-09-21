@@ -50,6 +50,7 @@ async def list_contracts(
     return await service.get_multi(skip=skip, limit=limit)
 
 @router.put("/{id}", response_model=ContractResponse)
+@router.patch("/{id}", response_model=ContractResponse)
 async def update_contract(
     id: UUID,
     data: ContractUpdate,

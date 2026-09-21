@@ -17,6 +17,8 @@ async def create_customer(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER", "USER"]))
 ):
     """Create a new customer."""
+    service = CustomerService(db)
+    return await service.create(customer_in)
 
 @router.get("/", response_model=List[CustomerResponse])
 async def read_customers(
@@ -26,6 +28,8 @@ async def read_customers(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER", "USER"]))
 ):
     """Retrieve customers."""
+    service = CustomerService(db)
+    return await service.get_multi(skip=skip, limit=limit)
 
 @router.get("/{customer_id}", response_model=CustomerResponse)
 async def read_customer(
@@ -34,10 +38,13 @@ async def read_customer(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER", "USER"]))
 ):
     """Get customer by ID."""
+    service = CustomerService(db)
+    customer = await service.get(customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
     return customer
 
+@router.put("/{customer_id}", response_model=CustomerResponse)
 @router.patch("/{customer_id}", response_model=CustomerResponse)
 async def update_customer(
     customer_id: UUID,
@@ -46,8 +53,11 @@ async def update_customer(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER", "USER"]))
 ):
     """Update a customer."""
+    service = CustomerService(db)
+    customer = await service.update(customer_id, customer_in)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    return customer
 
 @router.delete("/{customer_id}", response_model=CustomerResponse)
 async def delete_customer(
@@ -56,5 +66,8 @@ async def delete_customer(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER", "USER"]))
 ):
     """Delete a customer."""
+    service = CustomerService(db)
+    customer = await service.delete(customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    return customer

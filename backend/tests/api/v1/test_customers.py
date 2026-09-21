@@ -4,32 +4,56 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_create_customer(client: AsyncClient, superuser_token_headers: dict):
     payload = {
-        "name": "Test Customer",
-        "email": "test@example.com",
+        "customer_type": "INDIVIDUAL",
+        "first_name": "Test",
+        "last_name": "Customer",
+        "email": "test.customer@example.com",
         "phone": "+1234567890",
-        "kyc_status": "pending"
+        "status": "ACTIVE",
+        "risk_category": "LOW"
     }
     response = await client.post(
         "/api/v1/customers/",
         headers=superuser_token_headers,
         json=payload
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
-    assert data["name"] == payload["name"]
+    assert data["first_name"] == payload["first_name"]
+    assert data["email"] == payload["email"]
 
 @pytest.mark.asyncio
 async def test_get_customer(client: AsyncClient, superuser_token_headers: dict):
+    payload = {
+        "customer_type": "INDIVIDUAL",
+        "first_name": "Get",
+        "last_name": "Customer",
+        "email": "get.customer@example.com",
+        "phone": "+1987654321",
+        "status": "ACTIVE",
+        "risk_category": "LOW"
+    }
+    create_res = await client.post(
+        "/api/v1/customers/",
+        headers=superuser_token_headers,
+        json=payload
+    )
+    assert create_res.status_code == 201
+    cust_id = create_res.json()["id"]
+
     response = await client.get(
-        "/api/v1/customers/1",
+        f"/api/v1/customers/{cust_id}",
         headers=superuser_token_headers
     )
-    assert response.status_code in [200, 404]
+    assert response.status_code == 200
+    assert response.json()["email"] == payload["email"]
 
 @pytest.mark.asyncio
 async def test_create_customer_unauthorized(client: AsyncClient, normal_user_token_headers: dict):
     payload = {
-        "name": "Unauthorized Customer",
+        "customer_type": "INDIVIDUAL",
+        "first_name": "Unauthorized",
+        "last_name": "Customer",
         "email": "unauth@example.com",
         "phone": "+0987654321"
     }
@@ -39,3 +63,4 @@ async def test_create_customer_unauthorized(client: AsyncClient, normal_user_tok
         json=payload
     )
     assert response.status_code in [401, 403]
+

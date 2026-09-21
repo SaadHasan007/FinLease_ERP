@@ -7,10 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import api_v1_router
 from app.core.config import settings
+from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import (
     AppException,
     app_exception_handler,
     generic_exception_handler,
+    integrity_exception_handler,
 )
 from app.core.logging_config import setup_logging
 from app.middleware.logging_middleware import LoggingMiddleware
@@ -47,8 +49,8 @@ app = FastAPI(
 # --- Middleware (order matters: outermost first) ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -57,7 +59,17 @@ app.add_middleware(RequestIDMiddleware)
 
 # --- Exception Handlers ---
 app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(IntegrityError, integrity_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # --- Routers ---
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "app": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "online",
+        "docs_url": "/docs",
+    }
+
 app.include_router(api_v1_router)

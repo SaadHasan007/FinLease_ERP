@@ -17,7 +17,12 @@ class ContractCreate(ContractBase):
     pass
 
 class ContractUpdate(BaseModel):
+    principal_amount: Optional[Decimal] = None
+    interest_rate: Optional[Decimal] = None
+    tenure_months: Optional[int] = None
     status: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
 class ContractResponse(ContractBase):
     id: UUID

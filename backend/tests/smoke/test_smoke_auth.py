@@ -22,7 +22,7 @@ class TestSmokeAuth:
         """SMOKE: Full auth flow — register → login → get profile."""
         # 1. Register
         reg_response = await client.post("/api/v1/auth/register", json={
-            "email": "smoke@finlease.test",
+            "email": "smoke@finlease.com",
             "password": "Sm0ke!Test",
             "first_name": "Smoke",
             "last_name": "User",
@@ -32,7 +32,7 @@ class TestSmokeAuth:
 
         # 2. Login
         login_response = await client.post("/api/v1/auth/login", json={
-            "email": "smoke@finlease.test",
+            "email": "smoke@finlease.com",
             "password": "Sm0ke!Test",
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
@@ -46,5 +46,5 @@ class TestSmokeAuth:
         )
         assert me_response.status_code == 200, f"Me failed: {me_response.text}"
         profile = me_response.json()["data"]
-        assert profile["email"] == "smoke@finlease.test"
+        assert profile["email"] == "smoke@finlease.com"
         assert any(r["name"] == "CUSTOMER" for r in profile["roles"])

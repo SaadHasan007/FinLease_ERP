@@ -35,7 +35,7 @@ class AIService:
         if not customer:
             raise ValueError(f"Customer for application {application_id} not found")
             
-        app_data = {"amount": float(application.amount) if getattr(application, 'amount', None) else 10000.0}
+        app_data = {"amount": float(getattr(application, 'requested_amount', 10000.0) or 10000.0)}
         cust_data = {"income": 60000.0} 
         
         prob_default, shap_values = self.credit_model.predict(app_data, cust_data)
@@ -56,7 +56,8 @@ class AIService:
         result = await self.session.execute(query)
         payments = result.scalars().all()
         
-        historical_data = [{"amount": p.amount, "date": p.payment_date} for p in payments]
+        historical_data = [{"amount": getattr(p, "total_amount", 1000.0), "date": getattr(p, "due_date", None)} for p in payments]
         
         forecast = self.cash_flow_forecaster.forecast(historical_data)
         return forecast
+

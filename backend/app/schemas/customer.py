@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.models.customer import CustomerType, CustomerStatus, RiskCategory
 
@@ -33,6 +33,4 @@ class CustomerResponse(CustomerBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

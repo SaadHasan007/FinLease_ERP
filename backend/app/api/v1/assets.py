@@ -17,6 +17,8 @@ async def create_asset(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER"]))
 ):
     """Create a new asset."""
+    service = AssetService(db)
+    return await service.create(asset_in)
 
 @router.get("/", response_model=List[AssetResponse])
 async def read_assets(
@@ -26,6 +28,8 @@ async def read_assets(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER"]))
 ):
     """Retrieve assets."""
+    service = AssetService(db)
+    return await service.get_multi(skip=skip, limit=limit)
 
 @router.get("/{asset_id}", response_model=AssetResponse)
 async def read_asset(
@@ -34,10 +38,13 @@ async def read_asset(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER"]))
 ):
     """Get asset by ID."""
+    service = AssetService(db)
+    asset = await service.get(asset_id)
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
     return asset
 
+@router.put("/{asset_id}", response_model=AssetResponse)
 @router.patch("/{asset_id}", response_model=AssetResponse)
 async def update_asset(
     asset_id: UUID,
@@ -46,8 +53,11 @@ async def update_asset(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER"]))
 ):
     """Update an asset."""
+    service = AssetService(db)
+    asset = await service.update(asset_id, asset_in)
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
+    return asset
 
 @router.delete("/{asset_id}", response_model=AssetResponse)
 async def delete_asset(
@@ -56,5 +66,8 @@ async def delete_asset(
     current_user = Depends(require_role(["SUPER_ADMIN", "MANAGER"]))
 ):
     """Delete an asset."""
+    service = AssetService(db)
+    asset = await service.delete(asset_id)
     if not asset:
         raise HTTPException(status_code=404, detail="Asset not found")
+    return asset

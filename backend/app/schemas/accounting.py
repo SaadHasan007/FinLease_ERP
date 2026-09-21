@@ -1,47 +1,49 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from decimal import Decimal
+from uuid import UUID
 from app.models.accounting import AccountType, JournalEntryStatus
 
 class AccountBase(BaseModel):
     code: str
     name: str
-    account_type: AccountType
+    account_type: str
 
 class AccountCreate(AccountBase):
     current_balance: Decimal = Decimal('0.0000')
 
 class AccountUpdate(BaseModel):
     name: Optional[str] = None
-    account_type: Optional[AccountType] = None
+    account_type: Optional[str] = None
 
 class AccountResponse(AccountBase):
-    id: str
+    id: UUID
     current_balance: Decimal
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class JournalEntryLineCreate(BaseModel):
-    account_id: str
+    account_id: UUID
     debit: Decimal = Decimal('0.0000')
     credit: Decimal = Decimal('0.0000')
 
-class JournalEntryLineResponse(JournalEntryLineCreate):
-    id: str
-    journal_entry_id: str
+class JournalEntryLineResponse(BaseModel):
+    id: UUID
+    journal_entry_id: UUID
+    account_id: UUID
+    debit: Decimal
+    credit: Decimal
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class JournalEntryBase(BaseModel):
     date: date
     reference: Optional[str] = None
     description: Optional[str] = None
-    status: JournalEntryStatus = JournalEntryStatus.DRAFT
+    status: str = "DRAFT"
 
 class JournalEntryCreate(JournalEntryBase):
     lines: List[JournalEntryLineCreate]
@@ -49,13 +51,12 @@ class JournalEntryCreate(JournalEntryBase):
 class JournalEntryUpdate(BaseModel):
     reference: Optional[str] = None
     description: Optional[str] = None
-    status: Optional[JournalEntryStatus] = None
+    status: Optional[str] = None
 
 class JournalEntryResponse(JournalEntryBase):
-    id: str
-    lines: List[JournalEntryLineResponse]
+    id: UUID
+    lines: List[JournalEntryLineResponse] = []
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

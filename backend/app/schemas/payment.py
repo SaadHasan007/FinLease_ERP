@@ -17,6 +17,10 @@ class PaymentScheduleCreate(PaymentScheduleBase):
 
 class PaymentScheduleUpdate(BaseModel):
     status: Optional[str] = None
+    due_date: Optional[date] = None
+    principal_amount: Optional[Decimal] = None
+    interest_amount: Optional[Decimal] = None
+    total_amount: Optional[Decimal] = None
 
 class PaymentScheduleResponse(PaymentScheduleBase):
     id: UUID
